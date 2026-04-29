@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mi Agenda</title>
+</head>
+<body>
+
+<h1>📅 Mi Agenda</h1>
+
+<input type="text" id="evento" placeholder="Escribe un evento">
+<input type="color" id="color">
+<button onclick="agregarEvento()">Agregar</button>
+
+
+<ul id="lista"></ul>
+
+<script>
+// ✅ 1. Función para crear eventos en pantalla
+function crearEventoEnPantalla(texto, color) {
+  const li = document.createElement("li");
+
+  const span = document.createElement("span");
+  span.textContent = texto;
+  span.style.color = color;
+
+  const boton = document.createElement("button");
+  boton.textContent = "❌";
+  boton.style.marginLeft = "10px";
+
+  boton.onclick = function() {
+    li.remove();
+    eliminarDeLocalStorage(texto);
+  };
+
+  li.appendChild(span);
+  li.appendChild(boton);
+
+  document.getElementById("lista").appendChild(li);
+}
+
+// ✅ 2. Guardar evento (se usa en agregarEvento)
+function guardarEvento(texto, color) {
+  let eventos = JSON.parse(localStorage.getItem("eventos")) || [];
+  eventos.push({ texto: texto, color: color });
+  localStorage.setItem("eventos", JSON.stringify(eventos));
+}
+
+// ✅ 3. Eliminar del localStorage
+function eliminarDeLocalStorage(texto) {
+  let eventos = JSON.parse(localStorage.getItem("eventos")) || [];
+  eventos = eventos.filter(evento => evento.texto !== texto);
+  localStorage.setItem("eventos", JSON.stringify(eventos));
+}
+
+// ✅ 4. Función principal (botón agregar)
+function agregarEvento() {
+  const texto = document.getElementById("evento").value;
+  const color = document.getElementById("color").value;
+
+  if (texto === "") {
+    alert("Escribe un evento");
+    return;
+  }
+
+  crearEventoEnPantalla(texto, color);
+  guardarEvento(texto, color);
+
+  document.getElementById("evento").value = "";
+}
+
+// ✅ 5. Cargar eventos al iniciar
+window.onload = function() {
+  let eventos = JSON.parse(localStorage.getItem("eventos")) || [];
+
+  eventos.forEach(evento => {
+    crearEventoEnPantalla(evento.texto, evento.color);
+  });
+};
+</script>
+
+
+</body>
+</html>
