@@ -119,7 +119,7 @@
 <script>
 const usuario = localStorage.getItem("usuarioActivo");
 
-// 🔒 Protección
+// Protección
 if (!usuario) {
   window.location.href = "login.html";
 }
@@ -127,7 +127,7 @@ if (!usuario) {
 let calendar;
 let fechaSeleccionada = "";
 
-// 🚀 Inicializar calendario
+// Inicializar calendario
 document.addEventListener('DOMContentLoaded', function () {
   const calendarEl = document.getElementById('calendar');
 
@@ -143,13 +143,13 @@ document.addEventListener('DOMContentLoaded', function () {
     events: (JSON.parse(localStorage.getItem("eventos")) || [])
       .filter(e => e.user === usuario),
 
-    // 🖱️ Click → abrir modal
+    // Click → abrir modal
     dateClick: function(info) {
       fechaSeleccionada = info.dateStr;
       document.getElementById("modal").style.display = "flex";
     },
 
-    // 🗑️ Eliminar con clic
+    // Eliminar con clic
     eventClick: function(info) {
       if (confirm("¿Eliminar evento?")) {
         info.event.remove();
@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
   calendar.render();
 });
 
-// 💾 Guardar desde modal
+// Guardar desde modal
 function guardarDesdeModal() {
   const texto = document.getElementById("modalTitulo").value;
   const color = document.getElementById("modalColor").value;
@@ -192,7 +192,7 @@ function guardarDesdeModal() {
   eventos.push(evento);
   localStorage.setItem("eventos", JSON.stringify(eventos));
 
-  console.log("Evento guardado:", evento); // 👈 DEBUG
+  console.log("Evento guardado:", evento); 
 
   calendar.addEvent(evento);
 
