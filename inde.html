@@ -1,83 +1,209 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+  <meta charset="UTF-8">
   <title>Mi Agenda</title>
+
+  <!-- FullCalendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+  //CSS
+  <style>
+    body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+input, button {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  background: #4CAF50;
+  color: white;
+  cursor: pointer;
+  border: none;
+}
+
+button:hover {
+  background: #45a049;
+}
+
+#calendar {
+  max-width: 900px;
+  margin: 30px auto;
+  background: white;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+}
+.fc-event {
+ border-radius: 8px;
+  padding: 3px;
+  font-weight: 500;
+}
+.fc-toolbar-title {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.fc-button {
+  background-color: #4CAF50 !important;
+  border: none !important;
+  border-radius: 6px !important;
+}
+
+.fc-button:hover {
+  background-color: #45a049 !important;
+}
+
+  </style>
 </head>
+
 <body>
 
 <h1>📅 Mi Agenda</h1>
 
 <input type="text" id="evento" placeholder="Escribe un evento">
+<input type="date" id="fecha">
 <input type="color" id="color">
 <button onclick="agregarEvento()">Agregar</button>
 
-
-<ul id="lista"></ul>
+<div id="calendar"></div>
 
 <script>
-// ✅ 1. Función para crear eventos en pantalla
-function crearEventoEnPantalla(texto, color) {
-  const li = document.createElement("li");
+let calendar;
 
-  const span = document.createElement("span");
-  span.textContent = texto;
-  span.style.color = color;
+// Inicializar calendario
+document.addEventListener('DOMContentLoaded', function () {
+  const calendarEl = document.getElementById('calendar');
 
-  const boton = document.createElement("button");
-  boton.textContent = "❌";
-  boton.style.marginLeft = "10px";
+  calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
 
-  boton.onclick = function() {
-    li.remove();
-    eliminarDeLocalStorage(texto);
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+
+    events: JSON.parse(localStorage.getItem("eventos")) || [],
+
+     dateClick: function(info) {
+  const texto = prompt("Nombre del evento:");
+  if (!texto) return;
+
+  const color = prompt("Color (ej: red, blue, #ff0000):", "#3788d8");
+
+  const evento = {
+    id: Date.now(), // 🔥 importante (ID único)
+    title: texto,
+    start: info.dateStr,
+    color: color
   };
 
-  li.appendChild(span);
-  li.appendChild(boton);
-
-  document.getElementById("lista").appendChild(li);
-}
-
-// ✅ 2. Guardar evento (se usa en agregarEvento)
-function guardarEvento(texto, color) {
   let eventos = JSON.parse(localStorage.getItem("eventos")) || [];
-  eventos.push({ texto: texto, color: color });
+  eventos.push(evento);
   localStorage.setItem("eventos", JSON.stringify(eventos));
+
+  calendar.addEvent(evento);
+},
+
+  eventClick: function(info) {
+  const opcion = prompt(
+    "Escribe:\n1 para editar\n2 para eliminar"
+  );
+
+  // ✏️ EDITAR
+  if (opcion === "1") {
+    const nuevoTexto = prompt("Nuevo nombre:", info.event.title);
+    const nuevoColor = prompt("Nuevo color:", info.event.backgroundColor);
+
+    if (nuevoTexto) info.event.setProp("title", nuevoTexto);
+    if (nuevoColor) info.event.setProp("backgroundColor", nuevoColor);
+
+    // actualizar localStorage
+    let eventos = JSON.parse(localStorage.getItem("eventos")) || [];
+
+    eventos = eventos.map(e => {
+      if (e.id == info.event.id) {
+        return {
+          ...e,
+          title: nuevoTexto || e.title,
+          color: nuevoColor || e.color
+        };
+      }
+      return e;
+    });
+
+    localStorage.setItem("eventos", JSON.stringify(eventos));
+  }
+
+  // 🗑️ ELIMINAR
+  if (opcion === "2") {
+    if (confirm("¿Eliminar evento?")) {
+      info.event.remove();
+
+      let eventos = JSON.parse(localStorage.getItem("eventos")) || [];
+      eventos = eventos.filter(e => e.id != info.event.id);
+
+      localStorage.setItem("eventos", JSON.stringify(eventos));
+    }
+  }
 }
 
-// ✅ 3. Eliminar del localStorage
-function eliminarDeLocalStorage(texto) {
+  });
+
+  calendar.render();
+});
+
+// Guardar evento en localStorage
+function guardarEvento(texto, color, fecha) {
   let eventos = JSON.parse(localStorage.getItem("eventos")) || [];
-  eventos = eventos.filter(evento => evento.texto !== texto);
+
+  const nuevoEvento = {
+    title: texto,
+    start: fecha,
+    color: color
+  };
+
+  eventos.push(nuevoEvento);
+
   localStorage.setItem("eventos", JSON.stringify(eventos));
+
+  return nuevoEvento;
 }
 
-// ✅ 4. Función principal (botón agregar)
+// Agregar evento
 function agregarEvento() {
   const texto = document.getElementById("evento").value;
+  const fecha = document.getElementById("fecha").value;
   const color = document.getElementById("color").value;
 
-  if (texto === "") {
-    alert("Escribe un evento");
+  if (texto === "" || fecha === "") {
+    alert("Completa todos los campos");
     return;
   }
 
-  crearEventoEnPantalla(texto, color);
-  guardarEvento(texto, color);
+  const evento = guardarEvento(texto, color, fecha);
 
+  // Añadir al calendario sin recargar
+  calendar.addEvent(evento);
+
+  // Limpiar campos
   document.getElementById("evento").value = "";
+  document.getElementById("fecha").value = "";
 }
-
-// ✅ 5. Cargar eventos al iniciar
-window.onload = function() {
-  let eventos = JSON.parse(localStorage.getItem("eventos")) || [];
-
-  eventos.forEach(evento => {
-    crearEventoEnPantalla(evento.texto, evento.color);
-  });
-};
 </script>
-
 
 </body>
 </html>
